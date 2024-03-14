@@ -9,6 +9,7 @@ use Vyuldashev\LaravelOpenApi\Builders\InfoBuilder;
 use Vyuldashev\LaravelOpenApi\Builders\PathsBuilder;
 use Vyuldashev\LaravelOpenApi\Builders\ServersBuilder;
 use Vyuldashev\LaravelOpenApi\Builders\TagsBuilder;
+use GoldSpecDigital\ObjectOrientedOAS\Objects\SecurityRequirement;
 
 class Generator
 {
@@ -41,14 +42,14 @@ class Generator
 
     public function generate(string $collection = self::COLLECTION_DEFAULT): OpenApi
     {
-        $middlewares = Arr::get($this->config, 'collections.'.$collection.'.middlewares');
+        $middlewares = Arr::get($this->config, 'collections.' . $collection . '.middlewares');
 
-        $info = $this->infoBuilder->build(Arr::get($this->config, 'collections.'.$collection.'.info', []));
-        $servers = $this->serversBuilder->build(Arr::get($this->config, 'collections.'.$collection.'.servers', []));
-        $tags = $this->tagsBuilder->build(Arr::get($this->config, 'collections.'.$collection.'.tags', []));
+        $info = $this->infoBuilder->build(Arr::get($this->config, 'collections.' . $collection . '.info', []));
+        $servers = $this->serversBuilder->build(Arr::get($this->config, 'collections.' . $collection . '.servers', []));
+        $tags = $this->tagsBuilder->build(Arr::get($this->config, 'collections.' . $collection . '.tags', []));
         $paths = $this->pathsBuilder->build($collection, Arr::get($middlewares, 'paths', []));
         $components = $this->componentsBuilder->build($collection, Arr::get($middlewares, 'components', []));
-        $extensions = Arr::get($this->config, 'collections.'.$collection.'.extensions', []);
+        $extensions = Arr::get($this->config, 'collections.' . $collection . '.extensions', []);
 
         $openApi = OpenApi::create()
             ->openapi(OpenApi::OPENAPI_3_0_2)
@@ -56,7 +57,7 @@ class Generator
             ->servers(...$servers)
             ->paths(...$paths)
             ->components($components)
-            ->security(...Arr::get($this->config, 'collections.'.$collection.'.security', []))
+            ->security(...collect(...Arr::get($this->config, 'collections.' . $collection . '.security', []))->map(fn ($securityMethod) => SecurityRequirement::create()->securityScheme($securityMethod))->toArray())
             ->tags(...$tags);
 
         foreach ($extensions as $key => $value) {
